@@ -6,6 +6,33 @@ Um sistema web feito em Django para ajudar guitarristas a registrarem e organiza
 [https://andersonalexandrebem.pythonanywhere.com/](https://andersonalexandrebem.pythonanywhere.com/)
 
 ---
+## 👨‍💻 Como testar o sistema online
+Você pode testar o sistema gratuitamente acessando a versão hospedada no PythonAnywhere:
+
+# 🔗 [Acesse o sistema](https://andersonalexandrebem.pythonanywhere.com/)
+
+## 👉 Passo a passo para testar:
+  ### 1. Adicione músicas
+
+  - Vá para Músicas e clique em "Adicionar Música".
+
+  - Use qualquer música que conheça. Para tablaturas, recomendo https://www.songsterr.com.
+
+  ### 2. Crie um treino
+
+  - No menu, clique em "Novo Treino".
+
+  - Dê um nome, descreva o foco do treino e selecione as músicas que você (ou outros usuários) adicionaram.
+
+  ### 3. Visualize o treino
+
+  - Vá na seção "Treinos", escolha um e clique em "Ver Músicas".
+
+  ### 4. Registre o tempo de prática
+
+  - Cada música do treino terá um link para a tablatura, além de um cronômetro e timer lateral para controle do tempo de execução.
+
+
 
 ## 🧠 Funcionalidades
 
