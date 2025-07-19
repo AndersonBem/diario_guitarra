@@ -1,0 +1,15 @@
+{% extends "base/base.html" %}
+
+{% block title %}Excluir Música{% endblock %}
+
+{% block content %}
+<h1>🗑️ Excluir Música</h1>
+<p>Tem certeza que desaja excluir a música<strong>{{ musica.nome }}?</strong></p>
+
+<form method = "post">
+    {% csrf_token %}
+    <button typo="submit">Sim, excluir</button>
+    <a href="{% url 'listar_musicas' %}">Cancelar</a>
+</form>
+{% endblock %}
+

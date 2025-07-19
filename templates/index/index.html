@@ -1,0 +1,25 @@
+<!-- templates/index/index.html -->
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Início{% endblock %}
+
+{% block content %}
+<div class="home">
+    <h1>🎸 Bem-vindo ao Diário de Guitarra!</h1>
+    <p>Organize e acompanhe seus treinos, músicas favoritas e evolução musical.</p>
+
+    <div class="home-buttons">
+        <a href="{% url 'listar_musicas' %}">
+            <button>🎵 Ver músicas cadastradas</button>
+        </a>
+        <a href="{% url 'adicionar_musica' %}">
+            <button>➕ Adicionar nova música</button>
+        </a>
+    </div>
+
+    <div class="info-box">
+        <img src="{% static 'img/daron-daron-malakian1.gif' %}" alt="GIF de guitarra" class="gif-inicial">
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!-- templates/base/base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Diário de Guitarra{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">🎸 Diário de Guitarra</div>
+            <div class="menu">
+                <a href="{% url 'listar_musicas' %}">🎵 Ver músicas</a>
+                <a href="{% url 'adicionar_musica' %}">➕ Adicionar música</a>
+                <a href="{% url 'listar_treinos' %}">🧠 Treinos</a>
+                <a href="{% url 'adicionar_treino' %}">➕ Novo treino</a>
+
+                <a href="{% url 'index' %}">início</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}
+        <!-- conteúdo específico de cada página -->
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>© {{ now|date:"Y" }} - Projeto pessoal de estudo 🎶</p>
+    </footer>
+</body>
+</html>

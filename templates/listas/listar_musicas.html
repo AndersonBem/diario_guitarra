@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+
+{% block title %}Lista de Músicas{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 20px;">🎸 <strong>Músicas Cadastradas</strong></h1>
+
+{% if musicas %}
+    <div class="musica-lista">
+        {% for musica in musicas %}
+            <div class="musica-card" style="background-color: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 1px 1px 5px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0;">🎵 <strong>{{ musica.nome }}</strong></h3>
+
+                <p>⏳ <strong>Duração sugerida:</strong> {{ musica.duracao_treino }} min</p>
+                <p>🕒 <strong>Tempo praticado:</strong> {{ musica.total_praticado }} min ({{ musica.total_hhmm }})</p>
+
+                {% if musica.link_partitura %}
+                    <p>📄 <a href="{{ musica.link_partitura }}" target="_blank">Ver partitura</a></p>
+                {% endif %}
+
+                <div style="margin-top: 10px;">
+                    <a href="{% url 'editar_musica' musica.id %}" style="margin-right: 10px;">✏️ Editar</a>
+                    <a href="{% url 'deletar_musica' musica.id %}">🗑️ Excluir</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>📭 Nenhuma música cadastrada ainda.</p>
+{% endif %}
+{% endblock %}

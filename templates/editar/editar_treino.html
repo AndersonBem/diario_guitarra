@@ -1,0 +1,14 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+  <h2>Editar treino: {{ treino.nome }}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar alterações</button>
+  </form>
+
+  <a href="{% url 'detalhar_treino' treino.id %}">Cancelar</a>
+{% endblock %}

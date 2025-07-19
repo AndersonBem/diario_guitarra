@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %} Treinos {% endblock %}
+
+{% block content %}
+<h1>🎯 Meus Treinos</h1>
+
+{% if treinos %}
+    <div class="musica-lista">
+        {% for treino in treinos %}
+                <div class="musica-card">
+                    <h3>
+                        {{ treino.nome }}
+                        {% if treino.id in execucoes_hoje %}
+                            <span style="color: green;">✔️ Realizado hoje</span>
+                        {% endif %}
+                    </h3>
+                    {% if treino.descricao %}
+                        <p>{{ treino.descricao }}</p>
+                    {% endif %}
+                    <p>📊 Já realizado: {{ treino.qtd_execucoes }} vezes</p>
+                <div class="acoes">
+                    <a href="{% url 'detalhar_treino' treino.id %}" class="btn-editar">🔍 Ver músicas</a>
+                    <a href="{% url 'editar_treino' treino.id %}" class="btn-editar" >✏️ Editar treino</a>
+                </div>
+                <form action="{% url 'deletar_treino' treino.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir este treino?')">🗑️ Excluir</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>📭 Nenhum treino cadastrado ainda.</p>
+{% endif %}
+{% endblock %}

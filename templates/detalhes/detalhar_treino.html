@@ -1,0 +1,230 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ treino.nome }}{% endblock %}
+
+{% block content %}
+<style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    #timer, #cronometro {
+      font-size: 2em;
+      margin: 15px 0;
+    }
+    input {
+      width: 60px;
+    }
+    #painel-temporizador {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: white;
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    width: 200px;
+    }
+
+    #painel-temporizador h3 {
+    margin: 10px 0 5px;
+    font-size: 16px;
+    }
+
+</style>
+
+<h1>🎯 {{ treino.nome }}</h1>
+<p><strong>Descrição:</strong> {{ treino.descricao|default:"(sem descrição)" }}</p>
+
+<h2>🎵 Músicas neste treino:</h2>
+{% if musicas_treino %}
+    <ol>
+        {% for item in musicas_treino %}
+            <li style="margin-bottom: 20px;">
+                <strong>{{ item.musica.nome }}</strong>
+                {% if item.musica.duracao_treino %} — {{ item.musica.duracao_treino }} min{% endif %}
+                {% if item.musica.link_partitura %}
+                    <br><a href="{{ item.musica.link_partitura }}" target="_blank">📄 Ver partitura</a>
+                {% endif %}
+
+                {% for exec in execucoes %}
+                    {% if exec.musica.id == item.musica.id and exec.data_execucao == data_hoje %}
+                        <span style="color: purple;">✔️</span>
+                    {% endif %}
+                {% endfor %}
+
+                <form action="{% url 'registrar_execucao' treino.id item.musica.id %}" method="post" style="margin-top: 10px;">
+                    {% csrf_token %}
+                    <label for="tempo_{{ item.musica.id }}">Tempo praticado (min):</label>
+                    <input type="number" name="tempo_praticado" id="tempo_{{ item.musica.id }}" required>
+                    <br>
+                    <label for="obs_{{ item.musica.id }}">Observações:</label>
+                    <input type="text" name="observacoes" id="obs_{{ item.musica.id }}" placeholder="(opcional)">
+                    <br>
+                    <button type="submit">💾 Salvar tempo</button>
+                </form>
+                <form action="{% url 'remover_musica_treino' treino.id item.musica.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja remover esta música do treino?')">❌ Remover</button>
+                </form>
+                
+            </li>
+        {% endfor %}
+
+        <h2>📅 Concluir Treino</h2>
+        <form method="post" action="{% url 'registrar_execucao_treino' treino.id %}">
+            {% csrf_token %}
+            <label for="obs_treino">Observações:</label>
+            <input type="text" name="observacoes" id="obs_treino" placeholder="(opcional)">
+            <br>
+            <button type="submit">✅ Concluir treino de hoje</button>
+        </form>
+    </ol>
+<div id="painel-temporizador">
+<h2>⏱️ Timer Regressivo</h2>
+                <div>
+                    <label>Minutos: <input type="number" id="minutos" value="0" min="0"></label>
+                    <label>Segundos: <input type="number" id="segundos" value="10" min="0"></label>
+                    <button onclick="prepararSom(); iniciarTimer()">▶️ Iniciar Timer</button>
+                    <button onclick="pararTimer()">⏹️ Parar</button>
+                    <button onclick="resetarTimer()">🔄 Resetar</button>
+                    <div id="timer">00:00.00</div>
+                </div>
+
+                <h2>⏲️ Cronômetro</h2>
+                <div>
+                    <button onclick="iniciarCronometro()">▶️ Iniciar Cronômetro</button>
+                    <button onclick="pararCronometro()">⏹️ Parar</button>
+                    <button onclick="resetarCronometro()">🔄 Resetar</button>
+                    <div id="cronometro">00:00.00</div>
+                </div>
+            </div>
+
+                <audio id="somAlerta" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto" loop></audio>
+{% else %}
+    <p>Nenhuma música adicionada ainda.</p>
+{% endif %}
+
+<a href="{% url 'listar_treinos' %}">← Voltar para os treinos</a>
+
+<!-- MODAL DE ALERTA -->
+<div id="modalAlerta" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:20px; border:2px solid #333; z-index:1000;">
+  <p>⏰ Tempo esgotado!</p>
+  <button onclick="pararAlarme()">Parar alarme</button>
+</div>
+<div style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999;" id="modalFundo"></div>
+
+<script>
+  let fimTimer = null;
+  let intervaloTimer = null;
+  let rodandoTimer = false;
+  const audio = document.getElementById("somAlerta");
+
+  function formatar(ms) {
+    const centesimos = Math.floor((ms % 1000) / 10);
+    const segundos = Math.floor((ms / 1000) % 60);
+    const minutos = Math.floor(ms / (60 * 1000));
+    return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}.${String(centesimos).padStart(2, '0')}`;
+  }
+
+  function atualizarTimer() {
+    const agora = new Date().getTime();
+    const restante = fimTimer - agora;
+
+    if (restante <= 0) {
+      document.getElementById('timer').textContent = "00:00.00";
+      pararTimer();
+
+      audio.loop = true;
+      audio.play().catch(e => {
+        console.log("Erro ao reproduzir som:", e);
+      });
+
+      // Exibe modal
+      document.getElementById("modalAlerta").style.display = "block";
+      document.getElementById("modalFundo").style.display = "block";
+    } else {
+      document.getElementById('timer').textContent = formatar(restante);
+    }
+  }
+
+  function iniciarTimer() {
+    if (rodandoTimer) return;
+
+    const minutos = parseInt(document.getElementById('minutos').value || 0);
+    const segundos = parseInt(document.getElementById('segundos').value || 0);
+    const duracao = (minutos * 60 + segundos) * 1000;
+    fimTimer = new Date().getTime() + duracao;
+    rodandoTimer = true;
+
+    intervaloTimer = setInterval(atualizarTimer, 10);
+  }
+
+  function pararTimer() {
+    clearInterval(intervaloTimer);
+    rodandoTimer = false;
+    fimTimer = null;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.loop = false;
+  }
+
+  function resetarTimer() {
+    pararTimer();
+    document.getElementById('timer').textContent = "00:00.00";
+    fecharModal();
+  }
+
+  function prepararSom() {
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }).catch(e => {
+      console.log("Som bloqueado pelo navegador:", e);
+    });
+  }
+
+  function pararAlarme() {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.loop = false;
+    fecharModal();
+  }
+
+  function fecharModal() {
+    document.getElementById("modalAlerta").style.display = "none";
+    document.getElementById("modalFundo").style.display = "none";
+  }
+
+  // Cronômetro (sem alterações)
+  let cronometroInicio = null;
+  let intervaloCrono = null;
+  let rodandoCrono = false;
+
+  function atualizarCronometro() {
+    const agora = new Date().getTime();
+    const decorrido = agora - cronometroInicio;
+    document.getElementById('cronometro').textContent = formatar(decorrido);
+  }
+
+  function iniciarCronometro() {
+    if (rodandoCrono) return;
+
+    cronometroInicio = new Date().getTime();
+    rodandoCrono = true;
+    intervaloCrono = setInterval(atualizarCronometro, 10);
+  }
+
+  function pararCronometro() {
+    clearInterval(intervaloCrono);
+    rodandoCrono = false;
+  }
+
+  function resetarCronometro() {
+    pararCronometro();
+    document.getElementById('cronometro').textContent = "00:00.00";
+  }
+</script>
+{% endblock %}
