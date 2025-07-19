@@ -69,7 +69,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'diario_guitarra',
         'USER': 'root',
-        'PASSWORD': 'A300621a@',
+        'PASSWORD': str(os.getenv('PASSWORD')),
         'HOST': 'localhost',
         'PORT': '3306',
     }
