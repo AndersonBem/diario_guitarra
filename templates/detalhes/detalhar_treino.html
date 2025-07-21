@@ -88,7 +88,7 @@
                     <label>Minutos: <input type="number" id="minutos" value="0" min="0"></label>
                     <label>Segundos: <input type="number" id="segundos" value="10" min="0"></label>
                     <button onclick="prepararSom(); iniciarTimer()">▶️ Iniciar Timer</button>
-                    <button onclick="pararTimer()">⏹️ Parar</button>
+                    <button id="timer-pause-btn" onclick="pausarOuContinuarTimer(this)">⏸️ Pausar/Play</button>
                     <button onclick="resetarTimer()">🔄 Resetar</button>
                     <div id="timer">00:00.00</div>
                 </div>
@@ -96,7 +96,7 @@
                 <h2>⏲️ Cronômetro</h2>
                 <div>
                     <button onclick="iniciarCronometro()">▶️ Iniciar Cronômetro</button>
-                    <button onclick="pararCronometro()">⏹️ Parar</button>
+                    <button id="crono-pause-btn" onclick="pausarOuContinuarCronometro(this)">⏸️ Pausar/Play</button>
                     <button onclick="resetarCronometro()">🔄 Resetar</button>
                     <div id="cronometro">00:00.00</div>
                 </div>
@@ -117,10 +117,19 @@
 <div style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999;" id="modalFundo"></div>
 
 <script>
+  const audio = document.getElementById("somAlerta");
+
   let fimTimer = null;
   let intervaloTimer = null;
   let rodandoTimer = false;
-  const audio = document.getElementById("somAlerta");
+  let pausadoTimer = false;
+  let restanteTimer = 0;
+
+  let cronometroInicio = null;
+  let intervaloCrono = null;
+  let rodandoCrono = false;
+  let pausadoCrono = false;
+  let tempoDecorrido = 0;
 
   function formatar(ms) {
     const centesimos = Math.floor((ms % 1000) / 10);
@@ -129,6 +138,8 @@
     return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}.${String(centesimos).padStart(2, '0')}`;
   }
 
+  // TIMER --------------------------
+
   function atualizarTimer() {
     const agora = new Date().getTime();
     const restante = fimTimer - agora;
@@ -136,13 +147,8 @@
     if (restante <= 0) {
       document.getElementById('timer').textContent = "00:00.00";
       pararTimer();
-
       audio.loop = true;
-      audio.play().catch(e => {
-        console.log("Erro ao reproduzir som:", e);
-      });
-
-      // Exibe modal
+      audio.play().catch(e => console.log("Erro ao reproduzir som:", e));
       document.getElementById("modalAlerta").style.display = "block";
       document.getElementById("modalFundo").style.display = "block";
     } else {
@@ -156,16 +162,37 @@
     const minutos = parseInt(document.getElementById('minutos').value || 0);
     const segundos = parseInt(document.getElementById('segundos').value || 0);
     const duracao = (minutos * 60 + segundos) * 1000;
+
     fimTimer = new Date().getTime() + duracao;
     rodandoTimer = true;
+    pausadoTimer = false;
 
     intervaloTimer = setInterval(atualizarTimer, 10);
+  }
+
+  function pausarOuContinuarTimer(btn) {
+    if (!rodandoTimer) return;
+
+    if (!pausadoTimer) {
+      clearInterval(intervaloTimer);
+      restanteTimer = fimTimer - new Date().getTime();
+      pausadoTimer = true;
+      btn.textContent = "▶️ Continuar";
+    } else {
+      fimTimer = new Date().getTime() + restanteTimer;
+      intervaloTimer = setInterval(atualizarTimer, 10);
+      pausadoTimer = false;
+      btn.textContent = "⏸️ Pausar";
+    }
   }
 
   function pararTimer() {
     clearInterval(intervaloTimer);
     rodandoTimer = false;
+    pausadoTimer = false;
     fimTimer = null;
+    restanteTimer = 0;
+    document.querySelector("#timer-pause-btn").textContent = "⏸️ Pausar";
     audio.pause();
     audio.currentTime = 0;
     audio.loop = false;
@@ -181,10 +208,57 @@
     audio.play().then(() => {
       audio.pause();
       audio.currentTime = 0;
-    }).catch(e => {
-      console.log("Som bloqueado pelo navegador:", e);
-    });
+    }).catch(e => console.log("Som bloqueado pelo navegador:", e));
   }
+
+  // CRONÔMETRO --------------------------
+
+  function atualizarCronometro() {
+    const agora = new Date().getTime();
+    const decorrido = agora - cronometroInicio + tempoDecorrido;
+    document.getElementById('cronometro').textContent = formatar(decorrido);
+  }
+
+  function iniciarCronometro() {
+    if (rodandoCrono) return;
+
+    cronometroInicio = new Date().getTime();
+    rodandoCrono = true;
+    pausadoCrono = false;
+
+    intervaloCrono = setInterval(atualizarCronometro, 10);
+  }
+
+  function pausarOuContinuarCronometro(btn) {
+    if (!rodandoCrono) return;
+
+    if (!pausadoCrono) {
+      clearInterval(intervaloCrono);
+      tempoDecorrido += new Date().getTime() - cronometroInicio;
+      pausadoCrono = true;
+      btn.textContent = "▶️ Continuar";
+    } else {
+      cronometroInicio = new Date().getTime();
+      intervaloCrono = setInterval(atualizarCronometro, 10);
+      pausadoCrono = false;
+      btn.textContent = "⏸️ Pausar";
+    }
+  }
+
+  function pararCronometro() {
+    clearInterval(intervaloCrono);
+    rodandoCrono = false;
+    pausadoCrono = false;
+    tempoDecorrido = 0;
+    document.querySelector("#crono-pause-btn").textContent = "⏸️ Pausar";
+  }
+
+  function resetarCronometro() {
+    pararCronometro();
+    document.getElementById('cronometro').textContent = "00:00.00";
+  }
+
+  // MODAL --------------------------
 
   function pararAlarme() {
     audio.pause();
@@ -197,34 +271,6 @@
     document.getElementById("modalAlerta").style.display = "none";
     document.getElementById("modalFundo").style.display = "none";
   }
-
-  // Cronômetro (sem alterações)
-  let cronometroInicio = null;
-  let intervaloCrono = null;
-  let rodandoCrono = false;
-
-  function atualizarCronometro() {
-    const agora = new Date().getTime();
-    const decorrido = agora - cronometroInicio;
-    document.getElementById('cronometro').textContent = formatar(decorrido);
-  }
-
-  function iniciarCronometro() {
-    if (rodandoCrono) return;
-
-    cronometroInicio = new Date().getTime();
-    rodandoCrono = true;
-    intervaloCrono = setInterval(atualizarCronometro, 10);
-  }
-
-  function pararCronometro() {
-    clearInterval(intervaloCrono);
-    rodandoCrono = false;
-  }
-
-  function resetarCronometro() {
-    pararCronometro();
-    document.getElementById('cronometro').textContent = "00:00.00";
-  }
 </script>
+
 {% endblock %}
