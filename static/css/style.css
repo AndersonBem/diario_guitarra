@@ -12,6 +12,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .navbar .logo {
@@ -19,10 +20,16 @@ body {
     font-size: 18px;
 }
 
+.navbar .menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
 .navbar .menu a {
     color: #fff;
     text-decoration: none;
-    margin-left: 20px;
     padding: 6px 12px;
     border-radius: 4px;
     background-color: #444;
@@ -78,6 +85,7 @@ footer {
     margin-bottom: 10px;
     color: #3c763d;
 }
+
 .home {
     text-align: center;
 }
@@ -101,16 +109,16 @@ footer {
     margin-top: 30px;
     box-shadow: 0 0 10px rgba(0,0,0,0.05);
 }
+
 .gif-inicial {
-    max-width: 300px;
+    max-width: 100%;
     height: auto;
     margin-top: 20px;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
 }
 
-
- .musica-lista {
+.musica-lista {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -135,6 +143,8 @@ footer {
 
 .acoes {
     margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .acoes a {
@@ -196,4 +206,43 @@ footer {
     color: #555;
     font-weight: bold;
     margin-left: 10px;
+}
+
+/* 🔁 RESPONSIVIDADE */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .navbar .menu {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .navbar .menu a {
+        margin: 5px 0;
+        width: 100%;
+    }
+
+    .container,
+    .form-card {
+        padding: 15px;
+        margin: 15px;
+    }
+
+    .home-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .acoes {
+        flex-direction: column;
+    }
+
+    .acoes a {
+        margin-bottom: 10px;
+    }
 }
